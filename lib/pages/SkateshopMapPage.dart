@@ -69,6 +69,8 @@ class _SkateshopMapPageState extends State<SkateshopMapPage> {
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
+      print(
+          'Lokasi didapat: Lat: [32m[1m${position.latitude}[0m, Lng: [32m[1m${position.longitude}[0m');
 
       setState(() {
         _currentPosition = position;
@@ -333,7 +335,8 @@ class _SkateshopMapPageState extends State<SkateshopMapPage> {
             padding: EdgeInsets.all(16),
             child: Row(
               children: [
-                Icon(Icons.filter_list, color: const Color.fromARGB(255, 33, 150, 243)),
+                Icon(Icons.filter_list,
+                    color: const Color.fromARGB(255, 33, 150, 243)),
                 SizedBox(width: 8),
                 Expanded(
                   child: DropdownButtonFormField<String>(

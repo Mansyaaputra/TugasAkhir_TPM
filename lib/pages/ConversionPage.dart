@@ -175,6 +175,12 @@ class _CState extends State<ConversionPage>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Card(
+            color: Colors.white,
+            elevation: 4,
+            shadowColor: Colors.black.withOpacity(0.15),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             child: Padding(
               padding: EdgeInsets.all(16),
               child: Column(
@@ -254,9 +260,16 @@ class _CState extends State<ConversionPage>
                     Container(
                       padding: EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.green.shade50,
+                        color: Colors.green.shade50, // kembali hijau
                         border: Border.all(color: Colors.green),
                         borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.10),
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -268,7 +281,7 @@ class _CState extends State<ConversionPage>
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: Colors.green.shade700,
+                              color: Colors.green.shade700, // hijau
                             ),
                           ),
                         ],
@@ -329,6 +342,12 @@ class _CState extends State<ConversionPage>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Card(
+            color: Colors.white,
+            elevation: 4,
+            shadowColor: Colors.black.withOpacity(0.15),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             child: Padding(
               padding: EdgeInsets.all(16),
               child: Column(
@@ -428,35 +447,33 @@ class _CState extends State<ConversionPage>
                     Container(
                       padding: EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.orange.shade50,
-                        border: Border.all(color: Colors.orange),
+                        color: Colors.blue.shade100, // biru muda
+                        border: Border.all(color: Colors.blue),
                         borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.10),
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: Column(
                         children: [
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.schedule, color: Colors.orange),
+                              Icon(Icons.schedule, color: Colors.blue),
                               SizedBox(width: 8),
                               Text(
-                                'Hasil Konversi:',
+                                _timeResult,
                                 style: TextStyle(
-                                  fontSize: 14,
+                                  fontSize: 16,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.orange.shade700,
+                                  color: Colors.black, // font hitam
                                 ),
                               ),
                             ],
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            '$_timeResult ($_toTimeZone)',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.orange.shade800,
-                            ),
                           ),
                         ],
                       ),

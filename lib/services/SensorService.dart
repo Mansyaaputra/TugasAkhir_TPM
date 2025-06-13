@@ -19,7 +19,9 @@ class SensorService {
 
   // Shake detection variables
   DateTime? _lastShakeTime;
-  static const double _shakeThreshold = 15.0;
+  static const double _shakeThreshold =
+      20.0; // Lebih tinggi, lebih tidak sensitif
+  static const int _shakeCooldownMs = 2000; // 2 detik antar shake
   Function? _onShakeCallback;
 
   // Activity detection
@@ -79,7 +81,7 @@ class SensorService {
       DateTime now = DateTime.now();
 
       if (_lastShakeTime == null ||
-          now.difference(_lastShakeTime!).inMilliseconds > 1000) {
+          now.difference(_lastShakeTime!).inMilliseconds > _shakeCooldownMs) {
         _lastShakeTime = now;
 
         if (_onShakeCallback != null) {

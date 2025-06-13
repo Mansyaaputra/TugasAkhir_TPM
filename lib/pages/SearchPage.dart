@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import '../services/ProductService.dart';
 import '../services/NotificationService.dart';
 import 'ProductDetailPage.dart';
+import 'AllOrderDetailPage.dart';
 
 class SearchPage extends StatefulWidget {
-  const SearchPage({Key? key}) : super(key: key);
+  final Function(Map<String, dynamic>) onAddOrder;
+  const SearchPage({Key? key, required this.onAddOrder}) : super(key: key);
 
   @override
   State<SearchPage> createState() => _SearchPageState();
@@ -568,7 +570,8 @@ class _SearchPageState extends State<SearchPage> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ProductDetailPage(product: product),
+                builder: (context) => ProductDetailPage(
+                    product: product, onAddOrder: widget.onAddOrder),
               ),
             );
           }

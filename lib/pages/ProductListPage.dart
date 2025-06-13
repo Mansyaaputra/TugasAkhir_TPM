@@ -3,8 +3,11 @@ import '../services/ProductService.dart';
 import '../services/NotificationService.dart';
 import '../services/SensorService.dart';
 import 'ProductDetailPage.dart';
+import 'AllOrderDetailPage.dart';
 
 class ProductListPage extends StatefulWidget {
+  final Function(Map<String, dynamic>) onAddOrder;
+  ProductListPage({Key? key, required this.onAddOrder}) : super(key: key);
   @override
   _ProductListPageState createState() => _ProductListPageState();
 }
@@ -446,12 +449,7 @@ class _ProductListPageState extends State<ProductListPage> {
   Widget _buildProductCard(Map<String, dynamic> product) {
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ProductDetailPage(product: product),
-          ),
-        );
+        _openProductDetail(product);
       },
       child: AspectRatio(
         aspectRatio: 1 / 3.2, // mirip skateboard deck
@@ -509,6 +507,18 @@ class _ProductListPageState extends State<ProductListPage> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  void _openProductDetail(Map<String, dynamic> product) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProductDetailPage(
+          product: product,
+          onAddOrder: widget.onAddOrder,
         ),
       ),
     );

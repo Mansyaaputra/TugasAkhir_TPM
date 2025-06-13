@@ -98,13 +98,14 @@ class _FeedbackPageState extends State<FeedbackPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Saran & Kesan'),
-        backgroundColor: Colors.green,
+        backgroundColor: Colors.blue,
       ),
       body: Padding(
         padding: EdgeInsets.all(16),
         child: Column(
           children: [
             Card(
+              color: Colors.blue.shade50,
               child: Padding(
                 padding: EdgeInsets.all(16),
                 child: Column(
@@ -115,6 +116,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
+                        color: Colors.blue.shade800,
                       ),
                     ),
                     SizedBox(height: 16),
@@ -157,7 +159,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                         ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor:
-                              _isLoading ? Colors.grey : Colors.green,
+                              _isLoading ? Colors.grey : Colors.blue, // biru
                           padding: EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
@@ -170,59 +172,27 @@ class _FeedbackPageState extends State<FeedbackPage> {
               ),
             ),
             SizedBox(height: 16),
+            // Daftar feedback
+            SizedBox(height: 24),
             Expanded(
-              child: feedbackList.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.feedback_outlined,
-                              size: 64, color: Colors.grey),
-                          SizedBox(height: 16),
-                          Text(
-                            'Belum ada saran',
-                            style: TextStyle(color: Colors.grey[600]),
-                          ),
-                        ],
-                      ),
-                    )
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Saran & Kesan Sebelumnya',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Expanded(
-                          child: ListView.builder(
-                            itemCount: feedbackList.length,
-                            itemBuilder: (context, index) {
-                              final feedback = feedbackList[index];
-                              return Card(
-                                margin: EdgeInsets.symmetric(vertical: 4),
-                                child: ListTile(
-                                  leading: CircleAvatar(
-                                    backgroundColor: Colors.green.shade100,
-                                    child:
-                                        Icon(Icons.person, color: Colors.green),
-                                  ),
-                                  title: Text(
-                                    feedback.name,
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                  subtitle: Text(feedback.message),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
+              child: ListView.builder(
+                itemCount: feedbackList.length,
+                itemBuilder: (context, index) {
+                  final feedback = feedbackList[index];
+                  return Card(
+                    color: Colors.blue.shade100,
+                    margin: EdgeInsets.symmetric(vertical: 6),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    child: ListTile(
+                      leading: Icon(Icons.message, color: Colors.blue.shade700),
+                      title: Text(feedback.name,
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: Text(feedback.message),
                     ),
+                  );
+                },
+              ),
             ),
           ],
         ),

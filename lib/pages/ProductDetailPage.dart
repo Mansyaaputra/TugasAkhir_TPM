@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/NotificationService.dart';
+import '../pages/AllOrderDetailPage.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final Map<String, dynamic> product;
+  final Function(Map<String, dynamic>) onAddOrder;
 
-  ProductDetailPage({required this.product});
+  ProductDetailPage({required this.product, required this.onAddOrder});
 
   @override
   _ProductDetailPageState createState() => _ProductDetailPageState();
@@ -31,7 +33,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        // Hapus judul/tulisan pada navbar
         title: null,
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
@@ -131,60 +132,63 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             // Form Nama, Alamat, No HP
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextField(
-                    controller: _nameController,
-                    decoration: InputDecoration(
-                      labelText: 'Nama Lengkap',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.person),
+              child: Padding(
+                padding: const EdgeInsets.all(0.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: _nameController,
+                      decoration: InputDecoration(
+                        labelText: 'Nama Lengkap',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.person),
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 12),
-                  TextField(
-                    controller: _addressController,
-                    decoration: InputDecoration(
-                      labelText: 'Alamat Pengiriman',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.home),
+                    SizedBox(height: 12),
+                    TextField(
+                      controller: _addressController,
+                      decoration: InputDecoration(
+                        labelText: 'Alamat Pengiriman',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.home),
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 12),
-                  TextField(
-                    controller: _phoneController,
-                    keyboardType: TextInputType.phone,
-                    decoration: InputDecoration(
-                      labelText: 'No. Handphone',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.phone),
+                    SizedBox(height: 12),
+                    TextField(
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      decoration: InputDecoration(
+                        labelText: 'No. Handphone',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.phone),
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 16),
-                  Text('Metode Pembayaran',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  SizedBox(height: 8),
-                  DropdownButtonFormField<String>(
-                    value: _selectedPayment,
-                    items: [
-                      DropdownMenuItem(
-                          value: 'cod', child: Text('Bayar di Tempat (COD)')),
-                      DropdownMenuItem(
-                          value: 'transfer', child: Text('Transfer Bank')),
-                      DropdownMenuItem(
-                          value: 'ewallet',
-                          child: Text('E-Wallet (OVO, GoPay, DANA)')),
-                    ],
-                    onChanged: (val) =>
-                        setState(() => _selectedPayment = val ?? 'cod'),
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.payment),
+                    SizedBox(height: 16),
+                    Text('Metode Pembayaran',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16)),
+                    SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      value: _selectedPayment,
+                      items: [
+                        DropdownMenuItem(
+                            value: 'cod', child: Text('Bayar di Tempat (COD)')),
+                        DropdownMenuItem(
+                            value: 'transfer', child: Text('Transfer Bank')),
+                        DropdownMenuItem(
+                            value: 'ewallet',
+                            child: Text('E-Wallet (OVO, GoPay, DANA)')),
+                      ],
+                      onChanged: (val) =>
+                          setState(() => _selectedPayment = val ?? 'cod'),
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.payment),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             // Tombol beli (opsional)
@@ -194,8 +198,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               height: 48,
               child: ElevatedButton.icon(
                 onPressed: () => _buyNow(context),
-                icon: Icon(Icons.shopping_cart_checkout),
-                label: Text('Beli Sekarang'),
+                icon: Icon(Icons.shopping_cart_checkout, color: Colors.black),
+                label: Text('Beli Sekarang',
+                    style: TextStyle(color: Colors.black)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   shape: RoundedRectangleBorder(
@@ -214,43 +219,57 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
   void _buyNow(BuildContext context) async {
     final productName = product['name'] ?? product['title'] ?? 'Produk';
+    final productImage = product['image'] ?? '';
+    final customerName = _nameController.text.trim();
+    final address = _addressController.text.trim();
+    final phone = _phoneController.text.trim();
+    final payment = _selectedPayment;
 
-    NotificationService.showInfo(
-      'Pembelian Dimulai',
-      'Mengarahkan ke halaman pembelian untuk $productName',
+    if (customerName.isEmpty || address.isEmpty || phone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Semua field harus diisi!'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    NotificationService.showLocalNotification(
+      title: 'Pesanan Diproses',
+      body: 'Pesanan untuk $productName sedang diproses.',
     );
 
-    final url = product['url'];
-    if (url != null && url.isNotEmpty) {
-      try {
-        final uri = Uri.parse(url);
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-          NotificationService.showSuccess(
-            'Link Terbuka',
-            'Halaman pembelian $productName berhasil dibuka',
-          );
-        } else {
-          NotificationService.showError(
-            'Gagal Membuka Link',
-            'Tidak dapat membuka link produk $productName',
-          );
-          _showErrorDialog(context, 'Tidak dapat membuka link produk');
-        }
-      } catch (e) {
-        NotificationService.showError(
-          'Error Beli Produk',
-          'Terjadi kesalahan saat membuka link: $e',
-        );
-        _showErrorDialog(context, 'Error: $e');
-      }
-    } else {
-      NotificationService.showWarning(
-        'Link Tidak Tersedia',
-        'Link produk $productName tidak tersedia saat ini',
-      );
-      _showErrorDialog(context, 'Link produk tidak tersedia');
-    }
+    final order = {
+      'productName': productName,
+      'productImage': productImage,
+      'quantity': _qty,
+      'customerName': customerName,
+      'address': address,
+      'phoneNumber': phone,
+      'paymentMethod': payment == 'cod'
+          ? 'Bayar di Tempat (COD)'
+          : payment == 'transfer'
+              ? 'Transfer Bank'
+              : 'E-Wallet (OVO, GoPay, DANA)',
+    };
+    widget.onAddOrder(order);
+
+    // Tampilkan pop up sukses
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Berhasil'),
+        content: Text('Produk berhasil dibeli!'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+    Navigator.pop(context); // Kembali ke halaman sebelumnya
   }
 
   void _showErrorDialog(BuildContext context, String message) {

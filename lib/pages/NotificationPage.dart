@@ -221,3 +221,10 @@ class _NotificationPageState extends State<NotificationPage> {
     );
   }
 }
+
+void someFunction(String productName) {
+  NotificationService.showLocalNotification(
+    title: 'Pesanan Diproses',
+    body: 'Pesanan untuk $productName sedang diproses.',
+  );
+}

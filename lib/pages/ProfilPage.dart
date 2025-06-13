@@ -111,11 +111,13 @@ class _ProfilePageState extends State<ProfilePage> {
           height: 120,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.orange, width: 3),
+            border: Border.all(
+                color: Colors.lightBlue.shade200, width: 3), // biru muda
             boxShadow: [
               BoxShadow(
-                color: Colors.orange.withOpacity(0.3),
-                blurRadius: 15,
+                color: Colors.lightBlue.shade100
+                    .withOpacity(0.6), // shadow biru muda
+                blurRadius: 18,
                 offset: Offset(0, 8),
               ),
             ],
@@ -129,13 +131,15 @@ class _ProfilePageState extends State<ProfilePage> {
           right: 0,
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.orange,
+              color: Colors.white, // lingkaran putih
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
+              border: Border.all(
+                  color: Colors.lightBlue.shade200, width: 2), // biru muda
             ),
             child: IconButton(
               onPressed: _changeProfilePicture,
-              icon: Icon(Icons.camera_alt, color: Colors.white, size: 20),
+              icon: Icon(Icons.camera_alt,
+                  color: Colors.blue, size: 20), // ikon kamera biru
               padding: EdgeInsets.all(8),
               constraints: BoxConstraints(minWidth: 40, minHeight: 40),
             ),
@@ -290,7 +294,11 @@ class _ProfilePageState extends State<ProfilePage> {
       margin: EdgeInsets.symmetric(vertical: 4),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        color: Colors.white,
+        gradient: LinearGradient(
+          colors: [Colors.lightBlue.shade50, Colors.white],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -305,12 +313,14 @@ class _ProfilePageState extends State<ProfilePage> {
           decoration: BoxDecoration(
             color: isDestructive
                 ? Colors.red.withOpacity(0.1)
-                : Colors.orange.withOpacity(0.1),
+                : Colors.lightBlue.shade50, // biru muda
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
             icon,
-            color: isDestructive ? Colors.red : Colors.orange,
+            color: isDestructive
+                ? Colors.red
+                : Colors.blue, // biru untuk edit/saran
             size: 24,
           ),
         ),
@@ -394,7 +404,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.orange.withOpacity(0.1),
+                              color: Colors.lightBlue.shade200.withOpacity(0.1),
                               blurRadius: 20,
                               offset: Offset(0, 10),
                             ),
@@ -416,22 +426,17 @@ class _ProfilePageState extends State<ProfilePage> {
                               padding: EdgeInsets.symmetric(
                                   horizontal: 24, vertical: 12),
                               decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Colors.orange.shade100,
-                                    Colors.orange.shade50
-                                  ],
-                                ),
+                                color: Colors.lightBlue.shade50, // biru muda
                                 borderRadius: BorderRadius.circular(25),
-                                border:
-                                    Border.all(color: Colors.orange.shade200),
+                                border: Border.all(
+                                    color: Colors.lightBlue.shade200),
                               ),
                               child: Text(
                                 _user?.username ?? 'User',
                                 style: TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.orange.shade700,
+                                  color: Colors.lightBlue.shade700, // biru muda
                                 ),
                               ),
                             ),

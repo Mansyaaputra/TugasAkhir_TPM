@@ -6,6 +6,10 @@ import 'NotificationPage.dart';
 import 'SkateshopMapPage.dart';
 import 'SensorPage.dart';
 import '../services/NotificationService.dart';
+import 'AllOrderDetailPage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../services/AuthService.dart';
+import 'dart:convert';
 
 class HomePage extends StatefulWidget {
   @override
@@ -15,18 +19,22 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _idx = 0;
   int _unreadNotificationCount = 0;
-  final _pages = [
-    ProductListPage(),
-    ConversionPage(),
-    SensorPage(),
-    SkateshopMapPage(),
-    NotificationPage(),
-    ProfilePage(),
-  ];
+  List<Map<String, dynamic>> _orders = [];
+  String? _currentUser;
+  late List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
+    _loadCurrentUserAndOrders();
+    _pages = [
+      ProductListPage(onAddOrder: _addOrder),
+      ConversionPage(),
+      SensorPage(),
+      SkateshopMapPage(),
+      NotificationPage(),
+      ProfilePage(),
+    ];
     _loadUnreadNotificationCount();
     NotificationService.addListener(_onNotificationUpdate);
     // Tambahkan notifikasi selamat datang dan demo
@@ -87,9 +95,40 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  Future<void> _loadCurrentUserAndOrders() async {
+    final user = await AuthService().getCurrentUser();
+    setState(() {
+      _currentUser = user;
+    });
+    if (user != null) {
+      final prefs = await SharedPreferences.getInstance();
+      final ordersJson = prefs.getString('orders_$user');
+      if (ordersJson != null) {
+        final List<dynamic> decoded = jsonDecode(ordersJson);
+        setState(() {
+          _orders = decoded.cast<Map<String, dynamic>>();
+        });
+      }
+    }
+  }
+
+  Future<void> _saveOrders() async {
+    if (_currentUser == null) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('orders_$_currentUser', jsonEncode(_orders));
+  }
+
+  void _addOrder(Map<String, dynamic> order) async {
+    setState(() {
+      _orders.add(order);
+    });
+    await _saveOrders();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: null,
       body: _pages[_idx],
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -116,15 +155,41 @@ class _HomePageState extends State<HomePage> {
           ),
           items: [
             BottomNavigationBarItem(
-              icon: Container(
-                padding: EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: _idx == 0
-                      ? Colors.white.withOpacity(0.2)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(Icons.shopping_bag_outlined, size: 24),
+              icon: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: _idx == 0
+                          ? Colors.white.withOpacity(0.2)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(Icons.shopping_bag_outlined, size: 24),
+                  ),
+                  SizedBox(width: 4),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              AllOrderDetailPage(orders: _orders),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(Icons.receipt_long,
+                          size: 22, color: Colors.white),
+                    ),
+                  ),
+                ],
               ),
               label: 'Produk',
             ),

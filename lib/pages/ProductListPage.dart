@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/ProductService.dart';
 import '../services/NotificationService.dart';
 import '../services/SensorService.dart';
+import 'ProductDetailPage.dart';
 
 class ProductListPage extends StatefulWidget {
   @override
@@ -20,11 +21,11 @@ class _ProductListPageState extends State<ProductListPage> {
   final List<Map<String, String>> _categories = [
     {'value': 'semua', 'label': 'Semua Produk'},
     {'value': 'deck', 'label': 'Deck'},
-    {'value': 'skateboard', 'label': 'Skateboard'},
-    {'value': 'helm', 'label': 'Helm'},
-    {'value': 'roda', 'label': 'Roda'},
-    {'value': 'sepatu', 'label': 'Sepatu'},
-    {'value': 'aksesoris', 'label': 'Aksesoris'},
+    {'value': 'griptape', 'label': 'Griptape'},
+    {'value': 'trucks', 'label': 'Trucks'},
+    {'value': 'wheels', 'label': 'Wheels'},
+    {'value': 'bearing', 'label': 'Bearing'},
+    {'value': 'bolt', 'label': 'Bolt'},
   ];
   @override
   void initState() {
@@ -65,101 +66,18 @@ class _ProductListPageState extends State<ProductListPage> {
 
     try {
       final products = await ProductService.fetchProducts();
-      // Tambahkan data dummy untuk memastikan ada produk untuk setiap kategori
-      final dummyProducts = _getDummyProducts();
-      final allProducts = [...products, ...dummyProducts];
-
       setState(() {
-        _allProducts = allProducts;
-        _filteredProducts = allProducts;
+        _allProducts = products;
+        _filteredProducts = products;
       });
     } catch (e) {
-      // Jika API gagal, gunakan data dummy
       setState(() {
-        _allProducts = _getDummyProducts();
-        _filteredProducts = _allProducts;
+        _allProducts = [];
+        _filteredProducts = [];
       });
     } finally {
       setState(() => _isLoading = false);
     }
-  }
-
-  List<dynamic> _getDummyProducts() {
-    return [
-      {
-        'title': 'Deck Skateboard Pro',
-        'name': 'Deck Skateboard Pro',
-        'price': '\$89.99',
-        'description':
-            'Deck skateboard berkualitas tinggi untuk skater profesional',
-        'image': 'https://picsum.photos/300/200?random=1',
-        'category': 'deck',
-        'priceValue': 89.99,
-      },
-      {
-        'title': 'Papan Skateboard Complete',
-        'name': 'Papan Skateboard Complete',
-        'price': '\$129.99',
-        'description': 'Skateboard lengkap siap pakai untuk pemula dan pro',
-        'image': 'https://picsum.photos/300/200?random=7',
-        'category': 'skateboard',
-        'priceValue': 129.99,
-      },
-      {
-        'title': 'Helm Keselamatan Premium',
-        'name': 'Helm Keselamatan Premium',
-        'price': '\$34.99',
-        'description': 'Helm pelindung untuk skateboarding yang aman',
-        'image': 'https://picsum.photos/300/200?random=2',
-        'category': 'helm',
-        'priceValue': 34.99,
-      },
-      {
-        'title': 'Roda Skateboard Premium',
-        'name': 'Roda Skateboard Premium',
-        'price': '\$24.99',
-        'description': 'Set roda skateboard berkualitas tinggi 52mm',
-        'image': 'https://picsum.photos/300/200?random=3',
-        'category': 'roda',
-        'priceValue': 24.99,
-      },
-      {
-        'title': 'Sepatu Skate Street',
-        'name': 'Sepatu Skate Street',
-        'price': '\$79.99',
-        'description': 'Sepatu skate dengan sole vulkanisir',
-        'image': 'https://picsum.photos/300/200?random=4',
-        'category': 'sepatu',
-        'priceValue': 79.99,
-      },
-      {
-        'title': 'Bearing ABEC-7',
-        'name': 'Bearing ABEC-7',
-        'price': '\$19.99',
-        'description': 'Set bearing ABEC-7 precision untuk roda skateboard',
-        'image': 'https://picsum.photos/300/200?random=5',
-        'category': 'aksesoris',
-        'priceValue': 19.99,
-      },
-      {
-        'title': 'Deck Street Style',
-        'name': 'Deck Street Style',
-        'price': '\$75.99',
-        'description': 'Deck dengan desain street art yang keren',
-        'image': 'https://picsum.photos/300/200?random=8',
-        'category': 'deck',
-        'priceValue': 75.99,
-      },
-      {
-        'title': 'Grip Tape Pro',
-        'name': 'Grip Tape Pro',
-        'price': '\$12.99',
-        'description': 'Grip tape anti slip untuk deck skateboard',
-        'image': 'https://picsum.photos/300/200?random=6',
-        'category': 'aksesoris',
-        'priceValue': 12.99,
-      },
-    ];
   }
 
   void _performSearch(String query) {
@@ -214,19 +132,27 @@ class _ProductListPageState extends State<ProductListPage> {
 
   String _formatPrice(dynamic price) {
     if (price == null) return 'Harga tidak tersedia';
-
-    String priceStr = price.toString();
-    if (priceStr.contains('\$')) {
-      return priceStr;
+    // Jika string mengandung $ (dari API), konversi ke rupiah kasar (misal 1$ = 16.000)
+    if (price is String && price.contains('4')) {
+      // Ambil angka setelah $ dan konversi ke double
+      final numStr = price.replaceAll(RegExp(r'[^0-9.]'), '');
+      final double? usd = double.tryParse(numStr);
+      if (usd != null) {
+        final int rupiah = (usd * 16000).round();
+        return 'Rp${rupiah.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (match) => ".")}';
+      }
     }
-
-    // Try to parse as number and format
-    final numPrice = double.tryParse(priceStr);
+    // Jika double (misal dari API), konversi ke rupiah
+    if (price is double) {
+      final int rupiah = (price * 16000).round();
+      return 'Rp${rupiah.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (match) => ".")}';
+    }
+    // Format as Rupiah jika int
+    int? numPrice = int.tryParse(price.toString());
     if (numPrice != null) {
-      return '\$${numPrice.toStringAsFixed(2)}';
+      return 'Rp${numPrice.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (match) => ".")}';
     }
-
-    return priceStr;
+    return price.toString();
   }
 
   Widget _buildProductImage(Map<String, dynamic> product) {
@@ -250,6 +176,8 @@ class _ProductListPageState extends State<ProductListPage> {
         child: Image.network(
           imageUrl,
           fit: BoxFit.cover,
+          width: 80, // Lebih kecil agar tidak overflow
+          height: 60,
           loadingBuilder: (context, child, loadingProgress) {
             if (loadingProgress == null) return child;
             return Center(
@@ -262,13 +190,14 @@ class _ProductListPageState extends State<ProductListPage> {
             );
           },
           errorBuilder: (context, error, stackTrace) {
-            print('Error loading image: $error'); // Debug log
-            return Icon(Icons.image_not_supported, color: Colors.grey);
+            print('Error loading image: $error');
+            return Icon(Icons.image_not_supported,
+                color: Colors.grey, size: 32);
           },
         ),
       );
     } else {
-      return Icon(Icons.skateboarding, color: Colors.blue);
+      return Icon(Icons.skateboarding, color: Colors.blue, size: 32);
     }
   }
 
@@ -515,79 +444,72 @@ class _ProductListPageState extends State<ProductListPage> {
   }
 
   Widget _buildProductCard(Map<String, dynamic> product) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Product Image
-          ClipRRect(
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(12),
-              topRight: Radius.circular(12),
-            ),
-            child: _buildProductImage(product),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ProductDetailPage(product: product),
           ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Product Name
-                Text(
-                  product['name'] ?? 'Nama Produk',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                SizedBox(height: 8),
-                // Product Price
-                Text(
-                  _formatPrice(product['price']),
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.green,
-                  ),
-                ),
-                SizedBox(height: 8),
-                // Product Description
-                Text(
-                  product['description'] ?? 'Deskripsi tidak tersedia',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.black54,
-                  ),
-                ),
-                SizedBox(height: 8),
-                // Product Category
-                if (product['category'] != null)
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade100,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Text(
-                      product['category'].toString().toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Colors.blue.shade700,
-                        fontWeight: FontWeight.bold,
+        );
+      },
+      child: AspectRatio(
+        aspectRatio: 1 / 3.2, // mirip skateboard deck
+        child: Card(
+          color: Colors.white, // card putih
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Gambar produk
+              Expanded(
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(18),
+                    child: Image.network(
+                      product['image'] ?? '',
+                      fit: BoxFit.contain,
+                      width: double.infinity,
+                      height: double.infinity,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: Colors.grey[200],
+                        child: Icon(Icons.image_not_supported,
+                            size: 48, color: Colors.grey),
                       ),
                     ),
                   ),
-              ],
-            ),
+                ),
+              ),
+              // Nama produk di bawah gambar
+              Padding(
+                padding:
+                    const EdgeInsets.only(top: 8, left: 8, right: 8, bottom: 4),
+                child: Text(
+                  product['name']?.toString() ?? '-',
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 17,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              ),
+              // Hanya ikon keranjang di bawah nama
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Icon(Icons.shopping_cart_outlined,
+                    size: 28, color: Colors.black),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

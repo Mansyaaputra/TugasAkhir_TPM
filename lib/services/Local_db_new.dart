@@ -4,8 +4,7 @@ import '../models/UserModel.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'dart:convert';
-// Conditional import for web
-import 'dart:html' as html show window;
+import 'package:image_picker/image_picker.dart';
 
 class LocalDb {
   static final instance = LocalDb._init();
@@ -51,220 +50,48 @@ class LocalDb {
   }
 
   Future<bool> saveUser(String u, String ph, {String? avatarUrl}) async {
-    if (kIsWeb) {
-      return await _saveUserWeb(u, ph, avatarUrl: avatarUrl);
-    } else {
-      return await _saveUserMobile(u, ph, avatarUrl: avatarUrl);
-    }
+    // Hanya implementasi mobile
+    return await _saveUserMobile(u, ph, avatarUrl: avatarUrl);
   }
 
   Future<User?> getUser(String u) async {
-    if (kIsWeb) {
-      return await _getUserWeb(u);
-    } else {
-      return await _getUserMobile(u);
-    }
+    // Hanya implementasi mobile
+    return await _getUserMobile(u);
   }
 
-  // New functions for session management
+  // Session management hanya untuk mobile
   Future<bool> setCurrentUser(String username) async {
-    if (kIsWeb) {
-      return await _setCurrentUserWeb(username);
-    } else {
-      return await _setCurrentUserMobile(username);
-    }
+    return await _setCurrentUserMobile(username);
   }
 
   Future<String?> getCurrentUser() async {
-    if (kIsWeb) {
-      return await _getCurrentUserWeb();
-    } else {
-      return await _getCurrentUserMobile();
-    }
+    return await _getCurrentUserMobile();
   }
 
   Future<bool> clearCurrentUser() async {
-    if (kIsWeb) {
-      return await _clearCurrentUserWeb();
-    } else {
-      return await _clearCurrentUserMobile();
-    }
+    return await _clearCurrentUserMobile();
   }
 
   Future<bool> updateUser(
-      String oldUsername, String newUsername, String newPasswordHash,
+      String oldUsername, String newUsername, String passwordHash,
       {String? avatarUrl}) async {
-    if (kIsWeb) {
-      return await _updateUserWeb(oldUsername, newUsername, newPasswordHash,
-          avatarUrl: avatarUrl);
-    } else {
-      return await _updateUserMobile(oldUsername, newUsername, newPasswordHash,
-          avatarUrl: avatarUrl);
-    }
+    final dbClient = await db;
+    final data = {
+      'username': newUsername,
+      'passwordHash': passwordHash,
+      if (avatarUrl != null) 'avatarUrl': avatarUrl,
+    };
+    final result = await dbClient.update(
+      'users',
+      data,
+      where: 'username = ?',
+      whereArgs: [oldUsername],
+    );
+    return result > 0;
   }
 
   Future<bool> deleteUser(String username) async {
-    if (kIsWeb) {
-      return await _deleteUserWeb(username);
-    } else {
-      return await _deleteUserMobile(username);
-    }
-  }
-
-  // Web implementation using localStorage
-  Future<bool> _saveUserWeb(String username, String passwordHash,
-      {String? avatarUrl}) async {
-    try {
-      print('Attempting to save user on web: $username'); // Debug log
-      final usersJson = html.window.localStorage['users'] ?? '{}';
-      final users = jsonDecode(usersJson) as Map<String, dynamic>;
-
-      if (users.containsKey(username)) {
-        print('User already exists: $username');
-        return false; // User already exists
-      }
-
-      // Store user data as a map including avatarUrl
-      users[username] = {
-        'passwordHash': passwordHash,
-        'avatarUrl': avatarUrl,
-      };
-      html.window.localStorage['users'] = jsonEncode(users);
-      print('User saved on web with username: $username'); // Debug log
-      return true;
-    } catch (e) {
-      print('Error saving user on web: $e');
-      return false;
-    }
-  }
-
-  Future<User?> _getUserWeb(String username) async {
-    try {
-      final usersJson = html.window.localStorage['users'] ?? '{}';
-      final users = jsonDecode(usersJson) as Map<String, dynamic>;
-
-      if (users.containsKey(username)) {
-        final userData = users[username];
-        // Handle both old format (string) and new format (map)
-        if (userData is String) {
-          // Old format - just password hash
-          return User(
-            username: username,
-            passwordHash: userData,
-          );
-        } else if (userData is Map<String, dynamic>) {
-          // New format - includes avatarUrl
-          return User(
-            username: username,
-            passwordHash: userData['passwordHash'] as String,
-            avatarUrl: userData['avatarUrl'] as String?,
-          );
-        }
-      }
-      return null;
-    } catch (e) {
-      print('Error getting user on web: $e');
-      return null;
-    }
-  }
-
-  // Session management for web
-  Future<bool> _setCurrentUserWeb(String username) async {
-    try {
-      html.window.localStorage['currentUser'] = username;
-      return true;
-    } catch (e) {
-      print('Error setting current user on web: $e');
-      return false;
-    }
-  }
-
-  Future<String?> _getCurrentUserWeb() async {
-    try {
-      return html.window.localStorage['currentUser'];
-    } catch (e) {
-      print('Error getting current user on web: $e');
-      return null;
-    }
-  }
-
-  Future<bool> _clearCurrentUserWeb() async {
-    try {
-      html.window.localStorage.remove('currentUser');
-      return true;
-    } catch (e) {
-      print('Error clearing current user on web: $e');
-      return false;
-    }
-  }
-
-  Future<bool> _updateUserWeb(
-      String oldUsername, String newUsername, String newPasswordHash,
-      {String? avatarUrl}) async {
-    try {
-      final usersJson = html.window.localStorage['users'] ?? '{}';
-      final users = jsonDecode(usersJson) as Map<String, dynamic>;
-
-      if (!users.containsKey(oldUsername)) {
-        return false; // User doesn't exist
-      }
-
-      // Get existing user data to preserve avatarUrl if not provided
-      final existingUserData = users[oldUsername];
-      String? existingAvatarUrl;
-
-      if (existingUserData is Map<String, dynamic>) {
-        existingAvatarUrl = existingUserData['avatarUrl'] as String?;
-      }
-
-      // Remove old user entry
-      users.remove(oldUsername);
-
-      // Add new user entry with updated data
-      users[newUsername] = {
-        'passwordHash': newPasswordHash,
-        'avatarUrl': avatarUrl ?? existingAvatarUrl,
-      };
-
-      html.window.localStorage['users'] = jsonEncode(users);
-
-      // Update current user if it was the updated user
-      final currentUser = await _getCurrentUserWeb();
-      if (currentUser == oldUsername) {
-        await _setCurrentUserWeb(newUsername);
-      }
-
-      return true;
-    } catch (e) {
-      print('Error updating user on web: $e');
-      return false;
-    }
-  }
-
-  Future<bool> _deleteUserWeb(String username) async {
-    try {
-      final usersJson = html.window.localStorage['users'] ?? '{}';
-      final users = jsonDecode(usersJson) as Map<String, dynamic>;
-
-      if (!users.containsKey(username)) {
-        return false; // User doesn't exist
-      }
-
-      // Remove user
-      users.remove(username);
-      html.window.localStorage['users'] = jsonEncode(users);
-
-      // Clear current user if it was the deleted user
-      final currentUser = await _getCurrentUserWeb();
-      if (currentUser == username) {
-        await _clearCurrentUserWeb();
-      }
-
-      return true;
-    } catch (e) {
-      print('Error deleting user on web: $e');
-      return false;
-    }
+    return await _deleteUserMobile(username);
   }
 
   // Mobile implementation using sqflite

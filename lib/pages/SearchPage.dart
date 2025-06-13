@@ -26,12 +26,12 @@ class _SearchPageState extends State<SearchPage> {
   RangeValues _priceRange = RangeValues(0, 1000);
 
   final List<String> _categories = [
-    'semua',
-    'skateboard',
-    'helm',
-    'roda',
-    'sepatu',
-    'aksesoris',
+    'deck',
+    'griptape',
+    'trucks',
+    'wheels',
+    'bearing',
+    'bolt',
   ];
 
   @override
@@ -438,18 +438,18 @@ class _SearchPageState extends State<SearchPage> {
 
   String _getCategoryDisplayName(String category) {
     switch (category) {
-      case 'semua':
-        return 'Semua';
-      case 'skateboard':
-        return 'Skateboard';
-      case 'helm':
-        return 'Helm';
-      case 'roda':
-        return 'Roda';
-      case 'sepatu':
-        return 'Sepatu';
-      case 'aksesoris':
-        return 'Aksesoris';
+      case 'deck':
+        return 'Deck';
+      case 'griptape':
+        return 'Griptape';
+      case 'trucks':
+        return 'Trucks';
+      case 'wheels':
+        return 'Wheels';
+      case 'bearing':
+        return 'Bearing';
+      case 'bolt':
+        return 'Bolt';
       default:
         return category;
     }

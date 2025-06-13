@@ -1,6 +1,49 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class NotificationService {
+  static final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+  static bool _initialized = false;
+
+  /// Inisialisasi notifikasi lokal (panggil di main atau saat app start)
+  static Future<void> initialize() async {
+    if (_initialized) return;
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    final InitializationSettings initializationSettings =
+        InitializationSettings(
+      android: initializationSettingsAndroid,
+    );
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+    _initialized = true;
+  }
+
+  /// Tampilkan notifikasi lokal di tray HP
+  static Future<void> showLocalNotification({
+    required String title,
+    required String body,
+  }) async {
+    await initialize();
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+      'default_channel_id',
+      'Notifikasi',
+      channelDescription: 'Notifikasi aplikasi',
+      importance: Importance.max,
+      priority: Priority.high,
+      ticker: 'ticker',
+    );
+    const NotificationDetails platformChannelSpecifics =
+        NotificationDetails(android: androidPlatformChannelSpecifics);
+    await flutterLocalNotificationsPlugin.show(
+      DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      title,
+      body,
+      platformChannelSpecifics,
+    );
+  }
+
   static final List<NotificationModel> _notifications = [];
   static final List<Function(List<NotificationModel>)> _listeners = [];
 
@@ -28,6 +71,7 @@ class NotificationService {
     NotificationType type = NotificationType.info,
     String? actionLabel,
     VoidCallback? onAction,
+    bool showSystemNotification = true,
   }) {
     final notification = NotificationModel(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -47,6 +91,9 @@ class NotificationService {
     }
 
     _notifyListeners();
+    if (showSystemNotification) {
+      showLocalNotification(title: title, body: message);
+    }
   }
 
   /// Mendapatkan semua notifikasi

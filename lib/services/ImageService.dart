@@ -13,10 +13,14 @@ class ImageService {
     try {
       // Request permission for gallery access
       if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
-        final permission = await Permission.photos.request();
+        var permission = await Permission.photos.request();
         if (!permission.isGranted) {
-          print('Gallery permission not granted');
-          return null;
+          // Fallback untuk Android < 13
+          permission = await Permission.storage.request();
+          if (!permission.isGranted) {
+            print('Gallery permission not granted');
+            return null;
+          }
         }
       }
 
@@ -43,7 +47,6 @@ class ImageService {
   /// Ambil foto dengan kamera
   static Future<String?> takePicture() async {
     try {
-      // Request camera permission
       if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
         final permission = await Permission.camera.request();
         if (!permission.isGranted) {
@@ -51,16 +54,13 @@ class ImageService {
           return null;
         }
       }
-
       final XFile? image = await _picker.pickImage(
         source: ImageSource.camera,
         maxWidth: 512,
         maxHeight: 512,
         imageQuality: 80,
       );
-
       if (image != null) {
-        // Convert to base64 for storage
         final bytes = await image.readAsBytes();
         final base64String = base64Encode(bytes);
         return 'data:image/jpeg;base64,$base64String';
@@ -103,7 +103,6 @@ class ImageService {
                 title: 'Ambil Foto',
                 subtitle: 'Gunakan kamera perangkat',
                 onTap: () async {
-                  Navigator.pop(context);
                   final imageUrl = await takePicture();
                   if (imageUrl != null) {
                     Navigator.pop(context, imageUrl);
@@ -116,7 +115,6 @@ class ImageService {
                 title: 'Pilih dari Galeri',
                 subtitle: 'Pilih foto yang sudah ada',
                 onTap: () async {
-                  Navigator.pop(context);
                   final imageUrl = await pickImageFromGallery();
                   if (imageUrl != null) {
                     Navigator.pop(context, imageUrl);

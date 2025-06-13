@@ -103,14 +103,9 @@ class _SensorPageState extends State<SensorPage> with TickerProviderStateMixin {
     return Scaffold(
       appBar: AppBar(
         title: Text('Sensor Skateboard'),
-        backgroundColor: Colors.orange,
-        actions: [
-          IconButton(
-            icon: Icon(_isMonitoring ? Icons.pause : Icons.play_arrow),
-            onPressed: _isMonitoring ? _stopMonitoring : _startMonitoring,
-            tooltip: _isMonitoring ? 'Pause Monitoring' : 'Start Monitoring',
-          ),
-        ],
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
+        elevation: 0,
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16),

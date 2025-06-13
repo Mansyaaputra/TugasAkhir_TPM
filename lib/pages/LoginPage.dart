@@ -60,199 +60,164 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blue.shade300, Colors.indigo.shade400],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.all(24),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Logo/Header
-                  Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 20,
-                          offset: Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: Icon(
-                      Icons.skateboarding,
-                      size: 60,
-                      color: Colors.blue,
-                    ),
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Logo/Header
+                Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.blue.withOpacity(0.15),
+                        blurRadius: 24,
+                        offset: Offset(0, 8),
+                      ),
+                    ],
                   ),
-
-                  SizedBox(height: 30),
-
-                  Text(
-                    'SkateShop',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: 2,
-                    ),
+                  child: Icon(
+                    Icons.skateboarding,
+                    size: 60,
+                    color: Colors.blue,
                   ),
-
-                  SizedBox(height: 8),
-
-                  Text(
-                    'Masuk ke akun Anda',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white.withOpacity(0.9),
-                    ),
+                ),
+                SizedBox(height: 30),
+                Text(
+                  'Masuk ke SkateShop',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue.shade900,
+                    letterSpacing: 1,
                   ),
-
-                  SizedBox(height: 40),
-
-                  // Login Form
-                  Container(
-                    padding: EdgeInsets.all(30),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 20,
-                          offset: Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        // Username Field
-                        TextFormField(
-                          controller: _userCtrl,
-                          decoration: InputDecoration(
-                            labelText: 'Username',
-                            prefixIcon: Icon(Icons.person, color: Colors.blue),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide:
-                                  BorderSide(color: Colors.blue, width: 2),
-                            ),
-                            filled: true,
-                            fillColor: Colors.grey[50],
-                          ),
-                        ),
-
-                        SizedBox(height: 20),
-
-                        // Password Field
-                        TextFormField(
-                          controller: _passCtrl,
-                          obscureText: true,
-                          decoration: InputDecoration(
-                            labelText: 'Password',
-                            prefixIcon: Icon(Icons.lock, color: Colors.blue),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide:
-                                  BorderSide(color: Colors.blue, width: 2),
-                            ),
-                            filled: true,
-                            fillColor: Colors.grey[50],
-                          ),
-                        ),
-
-                        SizedBox(height: 30),
-
-                        // Login Button
-                        Container(
-                          width: double.infinity,
-                          height: 56,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [Colors.blue, Colors.blue.shade600],
-                            ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Login untuk mulai belanja skateboard',
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Colors.blueGrey.shade700,
+                  ),
+                ),
+                SizedBox(height: 32),
+                // Login Form
+                Container(
+                  padding: EdgeInsets.all(28),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.blue.withOpacity(0.08),
+                        blurRadius: 20,
+                        offset: Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      // Username Field
+                      TextFormField(
+                        controller: _userCtrl,
+                        decoration: InputDecoration(
+                          labelText: 'Username',
+                          prefixIcon: Icon(Icons.person, color: Colors.blue),
+                          border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.blue.withOpacity(0.3),
-                                blurRadius: 15,
-                                offset: Offset(0, 8),
-                              ),
-                            ],
                           ),
-                          child: ElevatedButton(
-                            onPressed: _isLoading ? null : _login,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              shadowColor: Colors.transparent,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide:
+                                BorderSide(color: Colors.blue, width: 2),
+                          ),
+                          filled: true,
+                          fillColor: Colors.blue.shade50,
+                        ),
+                      ),
+                      SizedBox(height: 18),
+                      // Password Field
+                      TextFormField(
+                        controller: _passCtrl,
+                        obscureText: true,
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          prefixIcon: Icon(Icons.lock, color: Colors.blue),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide:
+                                BorderSide(color: Colors.blue, width: 2),
+                          ),
+                          filled: true,
+                          fillColor: Colors.blue.shade50,
+                        ),
+                      ),
+                      SizedBox(height: 28),
+                      // Login Button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 54,
+                        child: ElevatedButton(
+                          onPressed: _login,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
                             ),
-                            child: _isLoading
-                                ? CircularProgressIndicator(color: Colors.white)
-                                : Text(
-                                    'Masuk',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
+                            elevation: 0,
+                          ),
+                          child: Text(
+                            'Masuk',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
-
-                        SizedBox(height: 20),
-
-                        // Register Link
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Belum punya akun? ',
-                              style: TextStyle(color: Colors.grey[600]),
-                            ),
-                            GestureDetector(
-                              onTap: () {
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => RegisterPage()),
-                                );
-                              },
-                              child: Text(
-                                'Daftar',
-                                style: TextStyle(
-                                  color: Colors.blue,
-                                  fontWeight: FontWeight.bold,
-                                  decoration: TextDecoration.underline,
-                                ),
+                      ),
+                      SizedBox(height: 18),
+                      // Register Link
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Belum punya akun? ',
+                            style: TextStyle(color: Colors.blueGrey.shade700),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => RegisterPage()),
+                              );
+                            },
+                            child: Text(
+                              'Daftar',
+                              style: TextStyle(
+                                color: Colors.blue,
+                                fontWeight: FontWeight.bold,
+                                decoration: TextDecoration.underline,
                               ),
                             ),
-                          ],
-                        ),
-                      ],
-                    ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

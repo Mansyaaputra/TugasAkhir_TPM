@@ -205,6 +205,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
 
     if (result != null) {
+      // Selalu refresh user setelah edit
       _loadUser();
     }
   }
@@ -343,7 +344,7 @@ class _ProfilePageState extends State<ProfilePage> {
           'Profil',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.orange,
+        backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [

@@ -58,6 +58,7 @@ class User {
   factory User.fromDb(Map<String, dynamic> map) => User(
         id: map['id'],
         username: map['username'],
+        avatarUrl: map['avatarUrl'], // tambahkan ini!
         passwordHash: map['passwordHash'],
       );
 }

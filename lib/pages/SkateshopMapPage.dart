@@ -276,15 +276,10 @@ class _SkateshopMapPageState extends State<SkateshopMapPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Skateshop Terdekat'),
-        backgroundColor: Colors.orange,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.refresh),
-            onPressed: _getCurrentLocation,
-            tooltip: 'Refresh Lokasi',
-          ),
-        ],
+        title: Text('Peta Skateshop'),
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
+        elevation: 0,
       ),
       body: Column(
         children: [
@@ -338,7 +333,7 @@ class _SkateshopMapPageState extends State<SkateshopMapPage> {
             padding: EdgeInsets.all(16),
             child: Row(
               children: [
-                Icon(Icons.filter_list, color: Colors.orange),
+                Icon(Icons.filter_list, color: const Color.fromARGB(255, 33, 150, 243)),
                 SizedBox(width: 8),
                 Expanded(
                   child: DropdownButtonFormField<String>(

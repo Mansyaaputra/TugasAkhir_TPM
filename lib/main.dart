@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'pages/LoginPage.dart';
+import 'services/NotificationService.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService.initialize();
   runApp(const MyApp());
 }
 

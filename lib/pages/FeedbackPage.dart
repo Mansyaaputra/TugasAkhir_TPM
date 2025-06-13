@@ -1,6 +1,17 @@
 import 'package:flutter/material.dart';
-import '../models/FeedbackModel.dart';
 import '../services/NotificationService.dart';
+
+class FeedbackModel {
+  final String name;
+  final String message;
+  final DateTime timestamp;
+
+  FeedbackModel({
+    required this.name,
+    required this.message,
+    DateTime? timestamp,
+  }) : timestamp = timestamp ?? DateTime.now();
+}
 
 class FeedbackPage extends StatefulWidget {
   const FeedbackPage({Key? key}) : super(key: key);
@@ -30,9 +41,9 @@ class _FeedbackPageState extends State<FeedbackPage> {
 
   void _loadFeedback() async {
     try {
-      // Menggunakan penyimpanan lokal sederhana untuk feedback
+      // Load dari database atau local storage
       setState(() {
-        feedbackList = []; // Reset untuk demo
+        feedbackList = [];
       });
     } catch (e) {
       print('Error loading feedback: $e');
@@ -99,6 +110,8 @@ class _FeedbackPageState extends State<FeedbackPage> {
       appBar: AppBar(
         title: Text('Saran & Kesan'),
         backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
+        elevation: 0,
       ),
       body: Padding(
         padding: EdgeInsets.all(16),
@@ -159,7 +172,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                         ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor:
-                              _isLoading ? Colors.grey : Colors.blue, // biru
+                              _isLoading ? Colors.grey : Colors.blue,
                           padding: EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
@@ -173,27 +186,61 @@ class _FeedbackPageState extends State<FeedbackPage> {
             ),
             SizedBox(height: 16),
             // Daftar feedback
-            SizedBox(height: 24),
-            Expanded(
-              child: ListView.builder(
-                itemCount: feedbackList.length,
-                itemBuilder: (context, index) {
-                  final feedback = feedbackList[index];
-                  return Card(
-                    color: Colors.blue.shade100,
-                    margin: EdgeInsets.symmetric(vertical: 6),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    child: ListTile(
-                      leading: Icon(Icons.message, color: Colors.blue.shade700),
-                      title: Text(feedback.name,
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: Text(feedback.message),
-                    ),
-                  );
-                },
+            if (feedbackList.isNotEmpty) ...[
+              Text(
+                'Feedback Terbaru',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
               ),
-            ),
+              SizedBox(height: 8),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: feedbackList.length,
+                  itemBuilder: (context, index) {
+                    final feedback = feedbackList[index];
+                    return Card(
+                      color: Colors.blue.shade100,
+                      margin: EdgeInsets.symmetric(vertical: 6),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      child: ListTile(
+                        leading:
+                            Icon(Icons.message, color: Colors.blue.shade700),
+                        title: Text(feedback.name,
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        subtitle: Text(feedback.message),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ] else ...[
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.comment_outlined,
+                        size: 80,
+                        color: Colors.grey[400],
+                      ),
+                      SizedBox(height: 16),
+                      Text(
+                        'Belum ada feedback',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),

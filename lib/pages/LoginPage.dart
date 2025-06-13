@@ -34,8 +34,13 @@ class _LoginPageState extends State<LoginPage> {
           'Login Berhasil',
           'Selamat datang kembali ${_userCtrl.text.trim()}!',
         );
-        Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (_) => HomePage()));
+
+        // Navigate ke HomePage dan clear login route
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => HomePage()),
+          (route) => false, // Clear semua route sebelumnya
+        );
       } else {
         NotificationService.showError(
           'Login Gagal',
@@ -168,22 +173,33 @@ class _LoginPageState extends State<LoginPage> {
                         width: double.infinity,
                         height: 54,
                         child: ElevatedButton(
-                          onPressed: _login,
+                          onPressed: _isLoading ? null : _login,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
+                            backgroundColor:
+                                _isLoading ? Colors.grey : Colors.blue,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14),
                             ),
                             elevation: 0,
                           ),
-                          child: Text(
-                            'Masuk',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
+                          child: _isLoading
+                              ? SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor:
+                                        AlwaysStoppedAnimation(Colors.white),
+                                  ),
+                                )
+                              : Text(
+                                  'Masuk',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
                         ),
                       ),
                       SizedBox(height: 18),

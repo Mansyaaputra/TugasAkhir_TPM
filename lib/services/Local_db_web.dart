@@ -7,6 +7,7 @@ class LocalDb implements DatabaseInterface {
   static final instance = LocalDb._init();
   LocalDb._init();
 
+  @override
   Future<bool> saveUser(String u, String ph, {String? avatarUrl}) async {
     try {
       print('Attempting to save user on web: $u');
@@ -31,6 +32,7 @@ class LocalDb implements DatabaseInterface {
     }
   }
 
+  @override
   Future<User?> getUser(String username) async {
     try {
       final usersJson = html.window.localStorage['users'] ?? '{}';
@@ -51,9 +53,11 @@ class LocalDb implements DatabaseInterface {
     }
   }
 
+  @override
   Future<bool> setCurrentUser(String username) async {
     try {
       html.window.localStorage['currentUser'] = username;
+      print('Web: Current user set to: $username'); // Debug log
       return true;
     } catch (e) {
       print('Error setting current user on web: $e');
@@ -61,18 +65,23 @@ class LocalDb implements DatabaseInterface {
     }
   }
 
+  @override
   Future<String?> getCurrentUser() async {
     try {
-      return html.window.localStorage['currentUser'];
+      final user = html.window.localStorage['currentUser'];
+      print('Web: Current user retrieved: $user'); // Debug log
+      return user;
     } catch (e) {
       print('Error getting current user on web: $e');
       return null;
     }
   }
 
+  @override
   Future<bool> clearCurrentUser() async {
     try {
       html.window.localStorage.remove('currentUser');
+      print('Web: Current user cleared'); // Debug log
       return true;
     } catch (e) {
       print('Error clearing current user on web: $e');
@@ -80,6 +89,7 @@ class LocalDb implements DatabaseInterface {
     }
   }
 
+  @override
   Future<bool> updateUser(
       String oldUsername, String newUsername, String newPasswordHash,
       {String? avatarUrl}) async {
@@ -118,6 +128,7 @@ class LocalDb implements DatabaseInterface {
     }
   }
 
+  @override
   Future<bool> deleteUser(String username) async {
     try {
       final usersJson = html.window.localStorage['users'] ?? '{}';

@@ -50,6 +50,7 @@ class LocalDb implements DatabaseInterface {
     }
   }
 
+  @override
   Future<bool> saveUser(String u, String ph, {String? avatarUrl}) async {
     try {
       print('Attempting to save user on mobile: $u');
@@ -65,6 +66,7 @@ class LocalDb implements DatabaseInterface {
     }
   }
 
+  @override
   Future<User?> getUser(String u) async {
     try {
       final dbClient = await db;
@@ -86,36 +88,47 @@ class LocalDb implements DatabaseInterface {
   }
 
   // Session management using SharedPreferences
+  @override
   Future<bool> setCurrentUser(String username) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      return await prefs.setString('currentUser', username);
+      final result = await prefs.setString('currentUser', username);
+      print(
+          'Mobile: Current user set to: $username, result: $result'); // Debug log
+      return result;
     } catch (e) {
       print('Error setting current user: $e');
       return false;
     }
   }
 
+  @override
   Future<String?> getCurrentUser() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      return prefs.getString('currentUser');
+      final user = prefs.getString('currentUser');
+      print('Mobile: Current user retrieved: $user'); // Debug log
+      return user;
     } catch (e) {
       print('Error getting current user: $e');
       return null;
     }
   }
 
+  @override
   Future<bool> clearCurrentUser() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      return await prefs.remove('currentUser');
+      final result = await prefs.remove('currentUser');
+      print('Mobile: Current user cleared, result: $result'); // Debug log
+      return result;
     } catch (e) {
       print('Error clearing current user: $e');
       return false;
     }
   }
 
+  @override
   Future<bool> updateUser(
       String oldUsername, String newUsername, String newPasswordHash,
       {String? avatarUrl}) async {
@@ -153,6 +166,7 @@ class LocalDb implements DatabaseInterface {
     }
   }
 
+  @override
   Future<bool> deleteUser(String username) async {
     try {
       final dbClient = await db;

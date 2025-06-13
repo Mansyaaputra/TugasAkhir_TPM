@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../services/ProductService.dart';
 import '../services/NotificationService.dart';
 import 'ProductDetailPage.dart';
-import 'AllOrderDetailPage.dart';
 
 class SearchPage extends StatefulWidget {
   final Function(Map<String, dynamic>) onAddOrder;
@@ -28,6 +27,7 @@ class _SearchPageState extends State<SearchPage> {
   RangeValues _priceRange = RangeValues(0, 1000);
 
   final List<String> _categories = [
+    'semua',
     'deck',
     'griptape',
     'trucks',
@@ -41,7 +41,8 @@ class _SearchPageState extends State<SearchPage> {
     super.initState();
     _loadProducts();
     _loadSearchHistory();
-    _searchFocusNode.requestFocus();
+    // Remove auto focus untuk menghindari keyboard pop-up yang tidak diinginkan
+    // _searchFocusNode.requestFocus();
   }
 
   @override
@@ -61,105 +62,42 @@ class _SearchPageState extends State<SearchPage> {
         _filteredProducts = products;
       });
     } catch (e) {
-      // Jika API gagal, gunakan data dummy untuk demo pencarian
+      // Jika API gagal, tampilkan pesan error
       setState(() {
-        _allProducts = _getDummyProducts();
-        _filteredProducts = _allProducts;
+        _allProducts = [];
+        _filteredProducts = [];
       });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal memuat produk: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
-  List<dynamic> _getDummyProducts() {
-    return [
-      {
-        'title': 'Papan Skateboard Pro',
-        'name': 'Papan Skateboard Pro',
-        'price': '\$89.99',
-        'description':
-            'Papan skateboard berkualitas tinggi untuk skater profesional',
-        'image': 'https://picsum.photos/300/200?random=1',
-        'category': 'skateboard',
-        'priceValue': 89.99,
-      },
-      {
-        'title': 'Helm Keselamatan Premium',
-        'name': 'Helm Keselamatan Premium',
-        'price': '\$34.99',
-        'description': 'Helm pelindung untuk skateboarding yang aman',
-        'image': 'https://picsum.photos/300/200?random=2',
-        'category': 'helm',
-        'priceValue': 34.99,
-      },
-      {
-        'title': 'Roda Skateboard Premium',
-        'name': 'Roda Skateboard Premium',
-        'price': '\$24.99',
-        'description': 'Set roda skateboard berkualitas tinggi 52mm',
-        'image': 'https://picsum.photos/300/200?random=3',
-        'category': 'roda',
-        'priceValue': 24.99,
-      },
-      {
-        'title': 'Sepatu Skate Street',
-        'name': 'Sepatu Skate Street',
-        'price': '\$79.99',
-        'description': 'Sepatu skate dengan sole vulkanisir',
-        'image': 'https://picsum.photos/300/200?random=4',
-        'category': 'sepatu',
-        'priceValue': 79.99,
-      },
-      {
-        'title': 'Bearing ABEC-7',
-        'name': 'Bearing ABEC-7',
-        'price': '\$19.99',
-        'description': 'Set bearing ABEC-7 precision untuk roda skateboard',
-        'image': 'https://picsum.photos/300/200?random=5',
-        'category': 'aksesoris',
-        'priceValue': 19.99,
-      },
-      {
-        'title': 'Grip Tape Pro',
-        'name': 'Grip Tape Pro',
-        'price': '\$12.99',
-        'description': 'Grip tape anti slip untuk deck skateboard',
-        'image': 'https://picsum.photos/300/200?random=6',
-        'category': 'aksesoris',
-        'priceValue': 12.99,
-      },
-    ];
-  }
-
   void _loadSearchHistory() {
-    // Simulasi load dari local storage
+    // Load dari local storage atau database
     setState(() {
       _searchHistory = [
         'skateboard deck',
-        'helm safety',
-        'roda 52mm',
-        'sepatu vans',
+        'roda skateboard',
+        'bearing ABEC',
+        'grip tape',
+        'truck skateboard',
       ];
     });
   }
 
-  void _addToSearchHistory(String query) {
-    if (query.isNotEmpty && !_searchHistory.contains(query)) {
-      setState(() {
-        _searchHistory.insert(0, query);
-        if (_searchHistory.length > 10) {
-          _searchHistory.removeLast();
-        }
-      });
-    }
-  }
-
   void _performSearch(String query) {
-    _addToSearchHistory(query);
-
     setState(() {
       if (query.isEmpty) {
-        _filteredProducts = _allProducts;
+        _filteredProducts = List.from(_allProducts);
       } else {
         _filteredProducts = _allProducts.where((product) {
           final name = product['name']?.toString().toLowerCase() ?? '';
@@ -175,32 +113,42 @@ class _SearchPageState extends State<SearchPage> {
       }
     });
 
+    // Add to search history only if query is not empty
+    if (query.isNotEmpty) {
+      _addToSearchHistory(query);
+    }
+
     _applyFilters();
   }
 
   void _applyFilters() {
     setState(() {
+      // Start with current search results
       var filtered = List<dynamic>.from(_filteredProducts);
 
-      // Filter by category
+      // Apply category filter
       if (_filterCategory != 'semua') {
         filtered = filtered.where((product) {
           final category = product['category']?.toString().toLowerCase() ?? '';
-          return category.contains(_filterCategory);
+          return category == _filterCategory.toLowerCase();
         }).toList();
       }
 
-      // Filter by price range
+      // Apply price range filter
       filtered = filtered.where((product) {
         final priceValue =
             product['priceValue'] ?? _extractPriceValue(product['price']);
         return priceValue >= _priceRange.start && priceValue <= _priceRange.end;
       }).toList();
 
-      // Sort products
+      // Apply sorting
       switch (_sortBy) {
         case 'nama':
-          filtered.sort((a, b) => (a['name'] ?? '').compareTo(b['name'] ?? ''));
+          filtered.sort((a, b) {
+            final nameA = a['name']?.toString() ?? '';
+            final nameB = b['name']?.toString() ?? '';
+            return nameA.compareTo(nameB);
+          });
           break;
         case 'harga_rendah':
           filtered.sort((a, b) {
@@ -303,6 +251,17 @@ class _SearchPageState extends State<SearchPage> {
     });
   }
 
+  void _addToSearchHistory(String query) {
+    if (query.isNotEmpty && !_searchHistory.contains(query)) {
+      setState(() {
+        _searchHistory.insert(0, query);
+        if (_searchHistory.length > 10) {
+          _searchHistory.removeLast();
+        }
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -351,7 +310,6 @@ class _SearchPageState extends State<SearchPage> {
       ),
       body: Column(
         children: [
-          // Search Bar
           Container(
             padding: EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -374,7 +332,9 @@ class _SearchPageState extends State<SearchPage> {
                     ? IconButton(
                         icon: Icon(Icons.clear),
                         onPressed: () {
-                          _searchController.clear();
+                          setState(() {
+                            _searchController.clear();
+                          });
                           _performSearch('');
                         },
                       )
@@ -388,15 +348,14 @@ class _SearchPageState extends State<SearchPage> {
                 contentPadding:
                     EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               ),
-              onChanged: _performSearch,
+              onChanged: (value) {
+                setState(() {}); // Update UI untuk suffix icon
+                _performSearch(value);
+              },
               onSubmitted: _performSearch,
             ),
           ),
-
-          // Quick Filters
           _buildQuickFilters(),
-
-          // Search Results or History
           Expanded(
             child: _searchController.text.isEmpty
                 ? _buildSearchHistory()
@@ -427,7 +386,8 @@ class _SearchPageState extends State<SearchPage> {
                 setState(() {
                   _filterCategory = category;
                 });
-                _applyFilters();
+                // Re-apply current search with new filter
+                _performSearch(_searchController.text);
               },
               selectedColor: Colors.blue.shade100,
               checkmarkColor: Colors.blue,
@@ -440,6 +400,8 @@ class _SearchPageState extends State<SearchPage> {
 
   String _getCategoryDisplayName(String category) {
     switch (category) {
+      case 'semua':
+        return 'Semua';
       case 'deck':
         return 'Deck';
       case 'griptape':
@@ -453,11 +415,42 @@ class _SearchPageState extends State<SearchPage> {
       case 'bolt':
         return 'Bolt';
       default:
-        return category;
+        return category.toUpperCase();
     }
   }
 
   Widget _buildSearchHistory() {
+    if (_searchHistory.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.search,
+              size: 80,
+              color: Colors.grey[400],
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Mulai cari produk skateboard',
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.grey[600],
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Ketik kata kunci di kolom pencarian',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[500],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return ListView(
       padding: EdgeInsets.all(16),
       children: [
@@ -567,13 +560,37 @@ class _SearchPageState extends State<SearchPage> {
           if (_isSelectionMode) {
             _toggleProductSelection(product);
           } else {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ProductDetailPage(
-                    product: product, onAddOrder: widget.onAddOrder),
-              ),
-            );
+            try {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProductDetailPage(
+                      product: product, onAddOrder: widget.onAddOrder),
+                ),
+              ).then((_) {
+                // Handle navigation completion
+              }).catchError((error) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error navigasi: ${error.toString()}'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+                return Future
+                    .value(); // Return empty future to avoid type error
+              });
+            } catch (e) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Error: ${e.toString()}'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }
           }
         },
         onLongPress: () {
@@ -586,7 +603,6 @@ class _SearchPageState extends State<SearchPage> {
           padding: EdgeInsets.all(12),
           child: Row(
             children: [
-              // Selection Checkbox
               if (_isSelectionMode) ...[
                 Checkbox(
                   value: isSelected,
@@ -594,34 +610,17 @@ class _SearchPageState extends State<SearchPage> {
                 ),
                 SizedBox(width: 8),
               ],
-
-              // Product Image
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  product['image'] ?? 'https://picsum.photos/100/100?random=1',
-                  width: 80,
-                  height: 80,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      width: 80,
-                      height: 80,
-                      color: Colors.grey[300],
-                      child: Icon(Icons.image_not_supported),
-                    );
-                  },
-                ),
+                child: _buildProductImage(product),
               ),
               SizedBox(width: 12),
-
-              // Product Info
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      product['name'] ?? 'Produk Skateboard',
+                      product['name']?.toString() ?? 'Produk Skateboard',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -631,7 +630,7 @@ class _SearchPageState extends State<SearchPage> {
                     ),
                     SizedBox(height: 4),
                     Text(
-                      product['description'] ?? 'Deskripsi produk',
+                      product['description']?.toString() ?? 'Deskripsi produk',
                       style: TextStyle(
                         color: Colors.grey[600],
                         fontSize: 14,
@@ -644,7 +643,8 @@ class _SearchPageState extends State<SearchPage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          product['price'] ?? '\$0.00',
+                          product['price']?.toString() ??
+                              'Harga tidak tersedia',
                           style: TextStyle(
                             color: Colors.blue,
                             fontWeight: FontWeight.bold,
@@ -667,6 +667,66 @@ class _SearchPageState extends State<SearchPage> {
         ),
       ),
     );
+  }
+
+  Widget _buildProductImage(dynamic product) {
+    final imageUrl = product['image']?.toString();
+
+    if (imageUrl != null && imageUrl.isNotEmpty && imageUrl != 'null') {
+      return Image.network(
+        imageUrl,
+        width: 80,
+        height: 80,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              Icons.image_not_supported,
+              color: Colors.grey[600],
+              size: 30,
+            ),
+          );
+        },
+      );
+    } else {
+      return Container(
+        width: 80,
+        height: 80,
+        decoration: BoxDecoration(
+          color: Colors.grey[300],
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(
+          Icons.skateboarding,
+          color: Colors.grey[600],
+          size: 30,
+        ),
+      );
+    }
   }
 
   void _showFilterSheet() {

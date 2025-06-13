@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/UserModel.dart';
 import '../services/NotificationService.dart';
 import '../services/AuthService.dart';
-import '../services/Local_db_new.dart';
+import '../services/Local_db.dart';
 import '../services/ImageService.dart';
 import 'LoginPage.dart';
 import 'EditUserPage.dart';
@@ -75,28 +75,34 @@ class _ProfilePageState extends State<ProfilePage> {
 
         if (success) {
           _loadUser();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Foto profil berhasil diperbarui'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Foto profil berhasil diperbarui'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Gagal memperbarui foto profil'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Gagal memperbarui foto profil'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -274,7 +280,19 @@ class _ProfilePageState extends State<ProfilePage> {
     );
 
     if (confirm == true) {
+      // Clear session dan stop notifications
       await AuthService().logout();
+
+      // Tampilkan notifikasi logout berhasil
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Logout berhasil'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      // Navigate ke login dan clear semua route
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => LoginPage()),

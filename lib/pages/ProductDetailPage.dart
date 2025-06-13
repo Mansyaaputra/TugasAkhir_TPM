@@ -53,6 +53,17 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   child: Image.network(
                     product['image'] ?? '',
                     fit: BoxFit.contain,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Center(
+                        child: CircularProgressIndicator(
+                          value: loadingProgress.expectedTotalBytes != null
+                              ? loadingProgress.cumulativeBytesLoaded /
+                                  loadingProgress.expectedTotalBytes!
+                              : null,
+                        ),
+                      );
+                    },
                     errorBuilder: (context, error, stackTrace) => Container(
                       color: Colors.grey[200],
                       child: Icon(Icons.image_not_supported,
@@ -68,7 +79,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               child: Text(
                 product['name'] != null
                     ? product['name'].toString().toUpperCase()
-                    : '-',
+                    : 'PRODUK SKATEBOARD',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
@@ -290,22 +301,28 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
   String _formatPrice(dynamic price) {
     if (price == null) return 'Harga tidak tersedia';
-    if (price is String && price.trim().startsWith('4')) {
-      final numStr = price.replaceAll(RegExp(r'[^0-9.]'), '');
+
+    // Handle string price with $
+    if (price is String && price.contains('\$')) {
+      final numStr = price.replaceAll(RegExp(r'[^\d.]'), '');
       final double? usd = double.tryParse(numStr);
       if (usd != null) {
-        final int rupiah = (usd * 16000).round();
+        final int rupiah = (usd * 15000).round(); // Rate real USD ke IDR
         return 'Rp${rupiah.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (match) => ".")}';
       }
     }
+
+    // Handle double
     if (price is double) {
-      final int rupiah = (price * 16000).round();
+      final int rupiah = (price * 15000).round();
       return 'Rp${rupiah.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (match) => ".")}';
     }
-    int? numPrice = int.tryParse(price.toString());
-    if (numPrice != null) {
-      return 'Rp${numPrice.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (match) => ".")}';
+
+    // Handle integer (sudah dalam rupiah)
+    if (price is int) {
+      return 'Rp${price.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (match) => ".")}';
     }
+
     return price.toString();
   }
 }

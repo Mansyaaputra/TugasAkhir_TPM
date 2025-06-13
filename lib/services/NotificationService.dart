@@ -1,47 +1,213 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter/foundation.dart';
+import 'dart:async';
+
+// Conditional imports
+import 'package:flutter_local_notifications/flutter_local_notifications.dart'
+    if (dart.library.html) 'package:flutter/widgets.dart';
+import 'package:permission_handler/permission_handler.dart'
+    if (dart.library.html) 'package:flutter/widgets.dart';
 
 class NotificationService {
-  static final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
+  static FlutterLocalNotificationsPlugin? flutterLocalNotificationsPlugin;
   static bool _initialized = false;
+  static Timer? _periodicTimer;
 
-  /// Inisialisasi notifikasi lokal (panggil di main atau saat app start)
+  /// Inisialisasi notifikasi lokal dengan request permission
   static Future<void> initialize() async {
     if (_initialized) return;
-    const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-    final InitializationSettings initializationSettings =
-        InitializationSettings(
-      android: initializationSettingsAndroid,
-    );
-    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
-    _initialized = true;
+
+    try {
+      if (kIsWeb) {
+        // Web implementation - minimal setup
+        _initialized = true;
+        print('Notification service initialized for web');
+        _startPeriodicNotifications();
+        return;
+      }
+
+      // Mobile implementation
+      flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
+      // Request notification permission untuk Android 13+
+      await _requestNotificationPermission();
+
+      const AndroidInitializationSettings initializationSettingsAndroid =
+          AndroidInitializationSettings('@mipmap/ic_launcher');
+
+      const InitializationSettings initializationSettings =
+          InitializationSettings(
+        android: initializationSettingsAndroid,
+      );
+
+      await flutterLocalNotificationsPlugin!.initialize(
+        initializationSettings,
+        onDidReceiveNotificationResponse: (response) {
+          print('Notification tapped: ${response.payload}');
+        },
+      );
+
+      // Create notification channel untuk Android
+      await _createNotificationChannel();
+
+      _initialized = true;
+      print('Notification service initialized successfully');
+
+      // Start periodic notifications
+      _startPeriodicNotifications();
+    } catch (e) {
+      print('Error initializing notifications: $e');
+      _initialized = true; // Set true anyway to prevent repeated attempts
+    }
   }
 
-  /// Tampilkan notifikasi lokal di tray HP
+  /// Request permission untuk notifikasi
+  static Future<bool> _requestNotificationPermission() async {
+    if (kIsWeb) return true;
+
+    try {
+      // Check current permission status
+      final permission = await Permission.notification.status;
+
+      if (permission.isDenied) {
+        // Request permission
+        final newPermission = await Permission.notification.request();
+        return newPermission.isGranted;
+      }
+
+      return permission.isGranted;
+    } catch (e) {
+      print('Error requesting notification permission: $e');
+      return true; // Return true as fallback
+    }
+  }
+
+  /// Create notification channel untuk Android
+  static Future<void> _createNotificationChannel() async {
+    if (kIsWeb || flutterLocalNotificationsPlugin == null) return;
+
+    try {
+      const AndroidNotificationChannel channel = AndroidNotificationChannel(
+        'skateshop_channel',
+        'SkateShop Notifications',
+        description: 'Notifikasi untuk aplikasi SkateShop',
+        importance: Importance.high,
+        playSound: true,
+        enableVibration: true,
+      );
+
+      await flutterLocalNotificationsPlugin!
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(channel);
+    } catch (e) {
+      print('Error creating notification channel: $e');
+    }
+  }
+
+  /// Start periodic notifications setiap 2 menit
+  static void _startPeriodicNotifications() {
+    _periodicTimer?.cancel(); // Cancel existing timer
+
+    _periodicTimer = Timer.periodic(Duration(minutes: 2), (timer) {
+      _showRandomNotification();
+    });
+
+    print('Periodic notifications started (every 2 minutes)');
+  }
+
+  /// Stop periodic notifications
+  static void stopPeriodicNotifications() {
+    _periodicTimer?.cancel();
+    _periodicTimer = null;
+    print('Periodic notifications stopped');
+  }
+
+  /// Show random notification
+  static void _showRandomNotification() {
+    final List<Map<String, String>> randomNotifications = [
+      {
+        'title': 'Promo Spesial!',
+        'body': 'Diskon 20% untuk semua aksesoris skateboard. Berlaku hari ini!'
+      },
+      {
+        'title': 'Reminder',
+        'body': 'Sudahkah kamu check produk favorit hari ini?'
+      },
+      {
+        'title': 'Komunitas Skater',
+        'body': 'Bergabunglah dengan komunitas skater di area terdekat!'
+      },
+      {
+        'title': 'Maintenance Board',
+        'body':
+            'Waktu yang tepat untuk cek kondisi bearing dan wheels skateboard kamu.'
+      },
+    ];
+
+    final random =
+        DateTime.now().millisecondsSinceEpoch % randomNotifications.length;
+    final notification = randomNotifications[random];
+
+    showLocalNotification(
+      title: notification['title']!,
+      body: notification['body']!,
+    );
+
+    // Add to internal notification list
+    addNotification(
+      title: notification['title']!,
+      message: notification['body']!,
+      type: NotificationType.info,
+      showSystemNotification: false, // Already shown above
+    );
+  }
+
+  /// Tampilkan notifikasi lokal di system tray
   static Future<void> showLocalNotification({
     required String title,
     required String body,
+    String? payload,
   }) async {
-    await initialize();
-    const AndroidNotificationDetails androidPlatformChannelSpecifics =
-        AndroidNotificationDetails(
-      'default_channel_id',
-      'Notifikasi',
-      channelDescription: 'Notifikasi aplikasi',
-      importance: Importance.max,
-      priority: Priority.high,
-      ticker: 'ticker',
-    );
-    const NotificationDetails platformChannelSpecifics =
-        NotificationDetails(android: androidPlatformChannelSpecifics);
-    await flutterLocalNotificationsPlugin.show(
-      DateTime.now().millisecondsSinceEpoch ~/ 1000,
-      title,
-      body,
-      platformChannelSpecifics,
-    );
+    try {
+      if (kIsWeb) {
+        // Web fallback - just log
+        print('Web notification: $title - $body');
+        return;
+      }
+
+      await initialize();
+
+      if (flutterLocalNotificationsPlugin == null) return;
+
+      final AndroidNotificationDetails androidPlatformChannelSpecifics =
+          AndroidNotificationDetails(
+        'skateshop_channel',
+        'SkateShop Notifications',
+        channelDescription: 'Notifikasi untuk aplikasi SkateShop',
+        importance: Importance.high,
+        priority: Priority.high,
+        ticker: 'ticker',
+        icon: '@mipmap/ic_launcher',
+        largeIcon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
+        styleInformation: BigTextStyleInformation(body),
+        playSound: true,
+        enableVibration: true,
+      );
+
+      final NotificationDetails platformChannelSpecifics =
+          NotificationDetails(android: androidPlatformChannelSpecifics);
+
+      await flutterLocalNotificationsPlugin!.show(
+        DateTime.now().millisecondsSinceEpoch ~/ 1000,
+        title,
+        body,
+        platformChannelSpecifics,
+        payload: payload,
+      );
+    } catch (e) {
+      print('Error showing local notification: $e');
+    }
   }
 
   static final List<NotificationModel> _notifications = [];
@@ -83,7 +249,7 @@ class NotificationService {
       onAction: onAction,
     );
 
-    _notifications.insert(0, notification); // Tambah di awal list
+    _notifications.insert(0, notification);
 
     // Batasi maksimal 50 notifikasi
     if (_notifications.length > 50) {
@@ -91,8 +257,33 @@ class NotificationService {
     }
 
     _notifyListeners();
+
     if (showSystemNotification) {
       showLocalNotification(title: title, body: message);
+    }
+  }
+
+  /// Check if notifications are enabled
+  static Future<bool> areNotificationsEnabled() async {
+    if (kIsWeb) return true;
+
+    try {
+      final permission = await Permission.notification.status;
+      return permission.isGranted;
+    } catch (e) {
+      print('Error checking notification permission: $e');
+      return true;
+    }
+  }
+
+  /// Open app settings for notification permission
+  static Future<void> openNotificationSettings() async {
+    if (kIsWeb) return;
+
+    try {
+      await openAppSettings();
+    } catch (e) {
+      print('Error opening app settings: $e');
     }
   }
 

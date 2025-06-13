@@ -12,16 +12,19 @@ class _CState extends State<ConversionPage>
 
   // Currency conversion variables
   final _amountCtrl = TextEditingController(text: '1');
-  String _from = 'USD', _to = 'EUR', _result = '';
+  String _from = 'USD', _to = 'IDR', _result = '';
+
+  // Gunakan data real atau dari API
   Map<String, double> rates = {
     'USD': 1,
+    'IDR': 15000,
     'EUR': 0.85,
     'JPY': 110,
-    'IDR': 15000,
     'GBP': 0.75,
     'AUD': 1.35
   };
-  // Time conversion variables
+
+  // Time conversion variables tetap sama karena bukan dummy
   String _fromTimeZone = 'WIB', _toTimeZone = 'WITA';
   String _timeResult = '';
 
@@ -137,6 +140,7 @@ class _CState extends State<ConversionPage>
                       labelColor: Colors.blue.shade700,
                       unselectedLabelColor: Colors.white,
                       dividerColor: Colors.transparent,
+                      indicatorSize: TabBarIndicatorSize.tab,
                       tabs: [
                         Tab(
                           icon: Icon(Icons.monetization_on),

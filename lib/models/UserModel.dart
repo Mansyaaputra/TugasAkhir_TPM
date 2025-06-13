@@ -50,15 +50,20 @@ class User {
 
   factory User.fromMap(Map<String, dynamic> map) => User(
         id: map['id'],
-        username: map['username'],
+        username: map['username'] ?? '',
         avatarUrl: map['avatarUrl'],
         passwordHash: map['passwordHash'],
       );
 
   factory User.fromDb(Map<String, dynamic> map) => User(
         id: map['id'],
-        username: map['username'],
-        avatarUrl: map['avatarUrl'], // tambahkan ini!
+        username: map['username'] ?? '',
+        avatarUrl: map['avatarUrl'],
         passwordHash: map['passwordHash'],
       );
+
+  @override
+  String toString() {
+    return 'User{id: $id, username: $username, avatarUrl: $avatarUrl}';
+  }
 }

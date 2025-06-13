@@ -44,15 +44,19 @@ class _SensorPageState extends State<SensorPage> with TickerProviderStateMixin {
   }
 
   void _initializeSensors() async {
-    await _sensorService.initialize();
+    try {
+      await _sensorService.initialize();
 
-    // Setup callbacks
-    _sensorService.setShakeCallback(() {
-      _shakeController.forward().then((_) => _shakeController.reverse());
-      _onShakeDetected();
-    });
+      // Setup callbacks
+      _sensorService.setShakeCallback(() {
+        _shakeController.forward().then((_) => _shakeController.reverse());
+        _onShakeDetected();
+      });
 
-    _startMonitoring();
+      _startMonitoring();
+    } catch (e) {
+      print('Error initializing sensors: $e');
+    }
   }
 
   void _startMonitoring() {
@@ -68,14 +72,14 @@ class _SensorPageState extends State<SensorPage> with TickerProviderStateMixin {
   }
 
   void _onShakeDetected() {
-    // Implementasi shake to refresh
+    // Implementasi shake to refresh tanpa dummy action
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
             Icon(Icons.refresh, color: Colors.white),
             SizedBox(width: 8),
-            Text('Data di-refresh dengan shake!'),
+            Text('Shake terdeteksi!'),
           ],
         ),
         backgroundColor: Colors.green,
@@ -152,8 +156,12 @@ class _SensorPageState extends State<SensorPage> with TickerProviderStateMixin {
             ),
             SizedBox(height: 16),
 
-            // Step Counter
+            // Step Counter dan Sensor Data
             _buildStepCounter(),
+            SizedBox(height: 16),
+
+            // Tambahkan sensor data lainnya
+            _buildSensorData(),
           ],
         ),
       ),
@@ -222,6 +230,60 @@ class _SensorPageState extends State<SensorPage> with TickerProviderStateMixin {
             Center(child: Text('Langkah')),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSensorData() {
+    return Card(
+      color: Colors.white,
+      elevation: 4,
+      shadowColor: Colors.black.withOpacity(0.15),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.sensors, color: Colors.orange),
+                SizedBox(width: 8),
+                Text(
+                  'Data Sensor',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 12),
+            _buildSensorItem('Accelerometer X',
+                (_sensorData['accelerometerX'] ?? 0.0).toStringAsFixed(2)),
+            _buildSensorItem('Accelerometer Y',
+                (_sensorData['accelerometerY'] ?? 0.0).toStringAsFixed(2)),
+            _buildSensorItem('Accelerometer Z',
+                (_sensorData['accelerometerZ'] ?? 0.0).toStringAsFixed(2)),
+            _buildSensorItem('Shake Detected',
+                (_sensorData['shakeDetected'] ?? false) ? 'Ya' : 'Tidak'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSensorItem(String label, String value) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(color: Colors.grey[700])),
+          Text(value, style: TextStyle(fontWeight: FontWeight.bold)),
+        ],
       ),
     );
   }

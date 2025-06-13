@@ -43,6 +43,14 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
+    if (password.length < 6) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Password minimal 6 karakter')),
+      );
+      return;
+    }
+
     if (password != confirmPassword) {
       Navigator.pop(context); // Dismiss loading
       ScaffoldMessenger.of(context).showSnackBar(
@@ -67,9 +75,11 @@ class _RegisterPageState extends State<RegisterPage> {
           SnackBar(content: Text('Registrasi berhasil! Silahkan login')),
         );
 
-        Navigator.pushReplacement(
+        // Navigate ke LoginPage dan clear register route
+        Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => LoginPage()),
+          (route) => false, // Clear semua route sebelumnya
         );
       } else {
         NotificationService.showError(

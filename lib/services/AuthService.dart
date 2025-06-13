@@ -1,8 +1,15 @@
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
-import 'Local_db_new.dart'; // Using the new platform-aware version
+import 'package:flutter/foundation.dart';
+import 'NotificationService.dart';
+
+// Conditional imports
+import 'Local_db_mobile.dart' if (dart.library.html) 'Local_db_web.dart' as db;
 
 class AuthService {
+  // Use platform-specific database implementation
+  final _localDb = db.LocalDb.instance;
+
   Future<bool> register(String username, String password,
       {String? avatarUrl}) async {
     try {
@@ -10,7 +17,7 @@ class AuthService {
       final hash = sha256.convert(utf8.encode(password)).toString();
       print('AuthService: Password hashed successfully');
       final result =
-          await LocalDb.instance.saveUser(username, hash, avatarUrl: avatarUrl);
+          await _localDb.saveUser(username, hash, avatarUrl: avatarUrl);
       print('AuthService: Registration result: $result');
       return result;
     } catch (e) {
@@ -22,11 +29,11 @@ class AuthService {
   Future<bool> login(String username, String password) async {
     try {
       final hash = sha256.convert(utf8.encode(password)).toString();
-      final user = await LocalDb.instance.getUser(username);
+      final user = await _localDb.getUser(username);
 
       if (user != null && user.passwordHash == hash) {
         // Set current user session
-        await LocalDb.instance.setCurrentUser(username);
+        await _localDb.setCurrentUser(username);
         return true;
       }
       return false;
@@ -38,7 +45,14 @@ class AuthService {
 
   Future<bool> logout() async {
     try {
-      return await LocalDb.instance.clearCurrentUser();
+      // Clear session saat logout
+      bool success = await _localDb.clearCurrentUser();
+
+      // Stop notifications saat logout
+      NotificationService.stopPeriodicNotifications();
+
+      print('Logout result: $success');
+      return success;
     } catch (e) {
       print('Error in logout: $e');
       return false;
@@ -47,7 +61,7 @@ class AuthService {
 
   Future<String?> getCurrentUser() async {
     try {
-      return await LocalDb.instance.getCurrentUser();
+      return await _localDb.getCurrentUser();
     } catch (e) {
       print('Error getting current user: $e');
       return null;
@@ -59,8 +73,8 @@ class AuthService {
       {String? avatarUrl}) async {
     try {
       final hash = sha256.convert(utf8.encode(newPassword)).toString();
-      return await LocalDb.instance
-          .updateUser(oldUsername, newUsername, hash, avatarUrl: avatarUrl);
+      return await _localDb.updateUser(oldUsername, newUsername, hash,
+          avatarUrl: avatarUrl);
     } catch (e) {
       print('Error updating user: $e');
       return false;
@@ -71,10 +85,10 @@ class AuthService {
       {String? avatarUrl}) async {
     try {
       // Get current user to keep existing password
-      final currentUser = await LocalDb.instance.getUser(oldUsername);
+      final currentUser = await _localDb.getUser(oldUsername);
       if (currentUser == null || currentUser.passwordHash == null) return false;
 
-      return await LocalDb.instance.updateUser(
+      return await _localDb.updateUser(
           oldUsername, newUsername, currentUser.passwordHash!,
           avatarUrl: avatarUrl);
     } catch (e) {
@@ -85,7 +99,7 @@ class AuthService {
 
   Future<bool> deleteUser(String username) async {
     try {
-      return await LocalDb.instance.deleteUser(username);
+      return await _localDb.deleteUser(username);
     } catch (e) {
       print('Error deleting user: $e');
       return false;

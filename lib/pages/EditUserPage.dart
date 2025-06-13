@@ -40,10 +40,11 @@ class _EditUserPageState extends State<EditUserPage> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
+
     try {
-      final newUsername =
-          _usernameController.text.trim(); // Update user in database
+      final newUsername = _usernameController.text.trim();
       bool success;
+
       if (_passwordController.text.isNotEmpty) {
         // Update with new password
         success = await AuthService().updateUser(
@@ -60,6 +61,7 @@ class _EditUserPageState extends State<EditUserPage> {
           avatarUrl: _avatarUrl,
         );
       }
+
       if (success) {
         // Create updated user object
         User updatedUser = User(
@@ -82,7 +84,6 @@ class _EditUserPageState extends State<EditUserPage> {
               backgroundColor: Colors.green,
             ),
           );
-          // Kirim updatedUser ke halaman sebelumnya agar bisa refresh profil
           Navigator.pop(context, updatedUser);
         }
       } else {

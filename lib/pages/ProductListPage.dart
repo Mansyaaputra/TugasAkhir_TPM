@@ -38,23 +38,27 @@ class _ProductListPageState extends State<ProductListPage> {
   }
 
   void _initializeSensor() async {
-    await _sensorService.initialize();
-    _sensorService.setShakeCallback(() {
-      _loadProducts();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              Icon(Icons.refresh, color: Colors.white),
-              SizedBox(width: 8),
-              Text('Data produk di-refresh dengan shake!'),
-            ],
+    try {
+      await _sensorService.initialize();
+      _sensorService.setShakeCallback(() {
+        _loadProducts();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.refresh, color: Colors.white),
+                SizedBox(width: 8),
+                Text('Data produk di-refresh dengan shake!'),
+              ],
+            ),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
           ),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-        ),
-      );
-    });
+        );
+      });
+    } catch (e) {
+      print('Error initializing sensor: $e');
+    }
   }
 
   @override
@@ -78,6 +82,11 @@ class _ProductListPageState extends State<ProductListPage> {
         _allProducts = [];
         _filteredProducts = [];
       });
+
+      NotificationService.showError(
+        'Error',
+        'Gagal memuat produk: ${e.toString()}',
+      );
     } finally {
       setState(() => _isLoading = false);
     }
@@ -107,7 +116,22 @@ class _ProductListPageState extends State<ProductListPage> {
 
   void _applyFilters() {
     setState(() {
-      var filtered = List<dynamic>.from(_filteredProducts);
+      var filtered = List<dynamic>.from(_allProducts);
+
+      // Apply search filter first
+      if (_searchController.text.isNotEmpty) {
+        final query = _searchController.text.toLowerCase();
+        filtered = filtered.where((product) {
+          final name = product['name']?.toString().toLowerCase() ?? '';
+          final description =
+              product['description']?.toString().toLowerCase() ?? '';
+          final category = product['category']?.toString().toLowerCase() ?? '';
+
+          return name.contains(query) ||
+              description.contains(query) ||
+              category.contains(query);
+        }).toList();
+      }
 
       // Filter by category
       if (_selectedCategory != 'semua') {
@@ -135,26 +159,28 @@ class _ProductListPageState extends State<ProductListPage> {
 
   String _formatPrice(dynamic price) {
     if (price == null) return 'Harga tidak tersedia';
-    // Jika string mengandung $ (dari API), konversi ke rupiah kasar (misal 1$ = 16.000)
-    if (price is String && price.contains('4')) {
-      // Ambil angka setelah $ dan konversi ke double
-      final numStr = price.replaceAll(RegExp(r'[^0-9.]'), '');
+
+    // Handle string price with $
+    if (price is String && price.contains('\$')) {
+      final numStr = price.replaceAll(RegExp(r'[^\d.]'), '');
       final double? usd = double.tryParse(numStr);
       if (usd != null) {
         final int rupiah = (usd * 16000).round();
         return 'Rp${rupiah.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (match) => ".")}';
       }
     }
-    // Jika double (misal dari API), konversi ke rupiah
+
+    // Handle double
     if (price is double) {
       final int rupiah = (price * 16000).round();
       return 'Rp${rupiah.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (match) => ".")}';
     }
-    // Format as Rupiah jika int
-    int? numPrice = int.tryParse(price.toString());
-    if (numPrice != null) {
-      return 'Rp${numPrice.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (match) => ".")}';
+
+    // Handle integer
+    if (price is int) {
+      return 'Rp${price.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (match) => ".")}';
     }
+
     return price.toString();
   }
 

@@ -75,19 +75,38 @@ class LocalDb {
   Future<bool> updateUser(
       String oldUsername, String newUsername, String passwordHash,
       {String? avatarUrl}) async {
-    final dbClient = await db;
-    final data = {
-      'username': newUsername,
-      'passwordHash': passwordHash,
-      if (avatarUrl != null) 'avatarUrl': avatarUrl,
-    };
-    final result = await dbClient.update(
-      'users',
-      data,
-      where: 'username = ?',
-      whereArgs: [oldUsername],
-    );
-    return result > 0;
+    try {
+      final dbClient = await db;
+
+      // Check if old user exists
+      final oldUser = await _getUserMobile(oldUsername);
+      if (oldUser == null) {
+        return false;
+      }
+
+      final data = {
+        'username': newUsername,
+        'passwordHash': passwordHash,
+        if (avatarUrl != null) 'avatarUrl': avatarUrl,
+      };
+      final result = await dbClient.update(
+        'users',
+        data,
+        where: 'username = ?',
+        whereArgs: [oldUsername],
+      );
+
+      // Update session if it was the updated user
+      final currentUser = await _getCurrentUserMobile();
+      if (currentUser == oldUsername) {
+        await _setCurrentUserMobile(newUsername);
+      }
+
+      return result > 0;
+    } catch (e) {
+      print('Error updating user: $e');
+      return false;
+    }
   }
 
   Future<bool> deleteUser(String username) async {
@@ -157,8 +176,6 @@ class LocalDb {
   Future<String?> _getCurrentUserMobile() async {
     try {
       final dbClient = await db;
-
-      // Create session table if not exists
       await dbClient.execute('''
         CREATE TABLE IF NOT EXISTS session(id INTEGER PRIMARY KEY, username TEXT)
       ''');
